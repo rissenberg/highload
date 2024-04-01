@@ -1,4 +1,4 @@
-![VK Feed Database structure](https://github.com/rissenberg/highload/assets/114286666/5d24e40a-b69f-45e2-b706-60acea09d07d)# Highload VK
+# Highload VK
 
 ## Содержание
   #### [1. Тема и целевая аудитория](#topic)
@@ -6,7 +6,9 @@
   #### [3. Расчет нагрузки](#load)
   #### [4. Глобальная балансировка нагрузки](#balance)
   #### [5. Локальная балансировка нагрузки](#balance-local)
-  #### [6. Источники](#source)
+  #### [6. Логическая схема БД](#logic-db)
+  #### [7. Физическая схема БД](#phys-db)
+  #### [8. Источники](#source)
 
 <a name="topic"></a>
 ## 1. Тема и целевая аудитория 

@@ -269,21 +269,32 @@ RPS                         | 26 950                | 53 900            |
 ```
 5830 ГБ * 365 * 3 / 1024 ≈ 6234 Тб
 ```
+
 #### Нагрузки на чтение/запись
 Рассмотрим нагрузку по типам действий, описанных в главе 3 и выделим связанные с действиями таблицы:
-* При формировании ленты пользователя пользователя, происходит обращение к таблицам users_sub и groups_subs (для формирования ленты), groups, users, posts, posts_likes, posts_views, comments и attachments *на чтение*
+* При формировании ленты пользователя пользователя, происходит обращение к таблицам users_subs и groups_subs (для формирования ленты), groups, users, posts, posts_likes, posts_views, comments и attachments *на чтение*
 * При просмотре страницы пользователя, происходит обращение к таблицам  users_sub (единожды), users, posts, posts_likes, posts_views, comments и attachments *на чтение*
-* При просмотре страницы сообщества, происходит обращение к таблицам groups и groups_subs (единожды), posts, posts_likes, posts_views, comments, users и attachments *на чтение*
+* При просмотре страницы сообщества, происходит обращение к таблицам groups и groups_subs, posts, posts_likes, posts_views, comments, users и attachments *на чтение*
 * При лайке поста происходи обращение к таблицам posts_likes *на запись*
 * При комментирование поста присходит обращение к comments и attachments *на запись*
 * При публикации поста присходит обращение к posts и attachments *на запись*
 
-Действие                            | RPS  | Таблицы | Тип
-------------------------------------| -----|---|-----
-Просмотр страницы / ленты           | 14900 |  users_sub, groups_subs, groups, users, posts, posts_likes, posts_views, comments, attachments | Чтение
-Лайк поста                          | 11575 | posts_likes | Запись
-Комментирование поста               | 275  | comments, attachments | Запись
-Публикация                          | 200 | posts, attachments  | Запись
+
+|	Таблица		| RPS	|	Тип запроса	|
+|---------|------|----------|
+|	users_subscribers	|  14900 |	Чтение	|
+|	groups_subscribers	|  14900 |	Чтение	|
+|	groups	|  14900 |	Чтение	|
+|	users	|  14900 |	Чтение	|
+|	posts	|  14900 |	Чтение	|
+|	posts_likes	|  14900 |	Чтение	|
+|	posts_views	|  14900 |	Чтение	|
+|	comments	|  14900 |	Чтение	|
+|	attachments	|  14900 |	Чтение	|
+|	posts_likes	|  11600 |	Запись	|
+|	comments	|  275 |	Запись	|
+|	attachments	|  475 |	Запись	|
+|	posts		|  200 |	Запись	|
 
 <a name="phys-db"></a>
 # 7. Физическая схема БД
@@ -294,32 +305,36 @@ RPS                         | 26 950                | 53 900            |
 Технологии для хранения данных:
 Таблица(-ы) | Технология|
 ------ |------------------ |
-sessions   | redis |
-users, groups, groups_subscribers, groups_admins, users_subscriptions | PostgreSQL |
+sessions   | Redis |
+users, groups, groups_subscribers, groups_admins, users_subscribers | PostgreSQL |
 posts, comments, attachments, posts_likes, posts_views | MongoDB |
 
 Так как один сервер БД не выдержит планируемую нагрузку, выполним шардинг таблиц posts, attachments и comments. Для более быстрого доступа к данным будет необходимо использовать индексы. 
 
-* Для таблиц users, groups инекс по полю id
-* Остальное храним в MongoDB в виде ключ-значение.
-* posts_likes, posts_views получаем по полю post_id
-* attachments по полю host_id
-* posts по полю blog_id
-* comments по полю post_id
+| Таблица   	| 	Индекс 		|
+|---------|----------|
+|	users	|	id		|
+|	groups	|	id		|
+|	posts	|	blog_id		|
+|	posts_likes	|	post_id		|
+|	posts_views	|	post_id		|
+|	attachments	|	post_id		|
+|	comments	|	post_id		|
+
 
 Также необходимо выполнить шардинг
 
 * Для шардинга таблицы posts необходимо сделать шардинг таблиц по полю blog_id
-* Для шардинга комментариев и просмотра постов необходимо сделать шардинг comments и post_views_per_user по полю post_id
-* Также имеет смысл сделать шардинг таблиц groups_subscribers и users_subscriptions по полю user_id
+* Для шардинга комментариев, лайков и просмотра постов необходимо сделать шардинг comments, post_likes и post_views по полю post_id
+* Также имеет смысл сделать шардинг таблиц groups_subscribers и users_subscribers по полю subscriber_id
 
 В совокупности это даст следующий результат:
 
-На одном сервере хранятся пользователи и сообщества
+* На одном сервере хранятся пользователи и сообщества
 
-На шардах для постов хранятся чаты с id в диапазоне от х до y, соответствующие им комментарии, прикрепленные файлы
+* На шардах для постов хранятся сами записи, соответствующие им комментарии, прикрепленные файлы, лайки и просмотры
 
-На сервере S3 хранятся медиафайлы из прикрепленных файлов
+* На сервере S3 хранятся медиафайлы из прикрепленных файлов
 
 Прирост в скорости получения данных будет сильным за счёт относительно маленьких таблиц, индексов, а также хранения в виде пар ключ-значение
 

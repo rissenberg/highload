@@ -241,7 +241,8 @@ RPS                         | 26 950                | 53 900            |
 
 [Ссылка на логическую схему БД](https://dbdiagram.io/d/VK-Feed-Database-structure-660ab57337b7e33fd7372b27)
 
-![VK Feed Database structure](https://github.com/rissenberg/highload/assets/114286666/d541fd7c-4f36-4737-a6b3-ab4761321dd2)
+![VK Feed Database structure (1)](https://github.com/rissenberg/highload/assets/114286666/b33e6ba3-72d6-4ce0-89e1-fbcfcc88907b)
+
 
 ### Схема S3
 
